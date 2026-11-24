@@ -537,10 +537,10 @@ button { font: inherit; color: inherit; }
   .gauge { grid-template-columns: 24px 92px 1fr 54px; grid-template-areas: "ico text bar val"; column-gap: 8px; }
   .g-ico { width: 22px; height: 22px; }
   .g-name { font-size: 1.15rem; }
-  .g-src { font-size: .62rem; }
+  .g-src { font-size: .72rem; }
   .g-bar { height: 15px; }
   .g-val b { font-size: 1.15rem; }
-  .g-val small { font-size: .68rem; }
+  .g-val small { font-size: .72rem; }
   #topbar { gap: 8px; padding-left: 10px; padding-right: 10px; }
   .clock-now { font-size: 1.8rem; }
   .icon-btn { width: 40px; height: 40px; }
