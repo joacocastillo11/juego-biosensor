@@ -2,15 +2,307 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Juego en construcción</title>
-  <style>
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center;
-           font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
-    p { font-size: 1.25rem; padding: 0 16px; text-align: center; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>La Subida</title>
+  <meta name="description" content="Un juego de 5 minutos sobre los sensores bioquímicos que leen tu cuerpo: pedalea por Torres del Paine y decide con el dato, no por el dato.">
+  <meta name="theme-color" content="#141b2d">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=League+Gothic&family=Barlow+Semi+Condensed:ital,wght@0,400;0,600;0,700;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23e8b92f'/%3E%3Cpath d='M32 10c8 12 14 20 14 28a14 14 0 0 1-28 0c0-8 6-16 14-28z' fill='%231f7a7a' stroke='%23141b2d' stroke-width='4'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <p>Juego en construcción. Vuelve pronto.</p>
+<!--
+THESIS: El HUD es el argumento. El sensor muestra estimaciones con su margen de error visible, se desvía de la verdad y se apaga; el cuerpo del ciclista es el segundo instrumento. Rechaza el dashboard fitness limpio y seguro de sí mismo.
+OWN-WORLD: Cel de anime jazz-noir de los 90 sobre Patagonia: rellenos planos, tinta azul-noche gruesa, trama de puntos en las sombras, grano de película; tarjetas de color mostaza, burdeos y petróleo con tipografía condensada; granito, lago turquesa, pampa dorada, nubes lenticulares.
+STORY: Entiende qué es un sensor bioquímico autónomo y cómo funciona Nix, pedalea decidiendo con dato y cuerpo, vive el error y la caída de señal, y se lleva la postura del autor.
+FIRST VIEWPORT: Escena viva de las Torres a pantalla completa; tarjeta inclinada mostaza con "LA SUBIDA" enorme abajo a la izquierda; botón Empezar dentro de la tarjeta; sonido arriba a la derecha.
+FORM: Dirección fijada por el brief del autor (gana a la tirada). Seed e3c2c8a5. Aporte de "endurance livery": compromiso total con franjas de color como identidad. Aporte de "deep dive": un solo eje de perfil de ruta rige el progreso.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+-->
+  <canvas id="world" aria-label="Ruta en bicicleta por Torres del Paine"></canvas>
+
+  <!-- Barra superior -->
+  <div id="topbar" class="hidden" aria-hidden="true">
+    <div class="clock">
+      <span class="clock-now" id="clockNow">0:00</span>
+      <span class="clock-goal">meta <b id="clockGoal">2:00</b></span>
+    </div>
+    <div class="route" aria-label="Avance de la ruta">
+      <canvas id="profile" width="400" height="56"></canvas>
+      <span class="route-end">Mirador</span>
+    </div>
+    <div class="top-actions">
+      <button class="icon-btn" id="btnPause" aria-label="Pausar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
+      </button>
+      <button class="icon-btn" id="btnMute" aria-label="Silenciar música">
+        <svg class="ico-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+        <svg class="ico-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mensajes cortos durante la carrera -->
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- HUD del sensor -->
+  <section id="hud" class="hidden" aria-label="Lectura del sensor">
+    <header class="hud-head">
+      <span class="led" id="led"></span>
+      <span class="hud-title">Tu parche · <span id="hudState">en vivo</span></span>
+      <span class="hud-note">lo que <em>estima</em> el sensor</span>
+    </header>
+    <div class="gauges">
+      <div class="gauge" data-k="hyd">
+        <svg class="g-ico" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3c6 9 10 14 10 19.5a10 10 0 0 1-20 0C6 17 10 12 16 3z"/></svg>
+        <div class="g-text">
+          <span class="g-name">Hidratación</span>
+          <span class="g-src">sudor · Nix</span>
+        </div>
+        <div class="g-bar"><span class="g-danger"></span><span class="g-band"></span><span class="g-tick"></span><span class="g-off">sin señal</span></div>
+        <div class="g-val"><b>--</b><small>±17</small></div>
+      </div>
+      <div class="gauge" data-k="en">
+        <svg class="g-ico" viewBox="0 0 32 32" aria-hidden="true"><rect x="7" y="4" width="18" height="24" rx="2"/><path d="M7 12h18M7 20h18M16 4v24"/></svg>
+        <div class="g-text">
+          <span class="g-name">Energía</span>
+          <span class="g-src">glucosa</span>
+        </div>
+        <div class="g-bar"><span class="g-danger"></span><span class="g-band"></span><span class="g-tick"></span><span class="g-off">sin señal</span></div>
+        <div class="g-val"><b>--</b><small>±8</small></div>
+      </div>
+      <div class="gauge" data-k="fat">
+        <svg class="g-ico" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 12h16a4 4 0 1 0-4-4M3 18h22a4 4 0 1 1-4 4M3 24h9"/></svg>
+        <div class="g-text">
+          <span class="g-name">Fatiga</span>
+          <span class="g-src">lactato · experimental</span>
+        </div>
+        <div class="g-bar fat"><span class="g-danger"></span><span class="g-band"></span><span class="g-tick"></span><span class="g-off">sin señal</span></div>
+        <div class="g-val"><b>--</b><small>±22</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Controles táctiles -->
+  <div id="touchpad" class="hidden" aria-hidden="true">
+    <button class="pad pad-l" id="padL" aria-label="Carril izquierdo"><svg viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8"/></svg></button>
+    <button class="pad pad-r" id="padR" aria-label="Carril derecho"><svg viewBox="0 0 24 24"><path d="M9 4l8 8-8 8"/></svg></button>
+  </div>
+
+  <!-- Pantallas -->
+  <main id="screens">
+
+    <!-- Portada -->
+    <section class="screen active" id="scrTitle" aria-labelledby="titleH">
+      <div class="title-card card-mustard">
+        <h1 id="titleH">La<br>Subida</h1>
+        <p class="title-sub">Un juego sobre los sensores que leen tu cuerpo, y sobre cuánto creerles.</p>
+        <div class="title-actions">
+          <button class="btn btn-ink" id="btnStart">Empezar <span class="key">Enter</span></button>
+          <span class="title-time">Dura menos de 5 minutos</span>
+        </div>
+        <p class="title-place">Mountain bike · Torres del Paine, Chile</p>
+      </div>
+      <p class="title-credit">Producción creativa · EAA2072 · Joaquín Castillo</p>
+    </section>
+
+    <!-- Intro 1: la tecnología -->
+    <section class="screen" id="scrIntro1" aria-labelledby="i1H">
+      <div class="story-card card-teal">
+        <h2 id="i1H">Sensores bioquímicos autónomos</h2>
+        <div class="story-body">
+          <figure class="story-fig" aria-hidden="true">
+            <svg viewBox="0 0 360 170" class="fig-ink">
+              <!-- brazo -->
+              <path class="skin" d="M10 120 C60 95 120 92 170 100 C190 104 205 112 210 128 C190 140 150 142 110 140 C70 139 35 140 10 150 Z"/>
+              <rect class="patch" x="92" y="98" width="46" height="22" rx="7" transform="rotate(-4 115 109)"/>
+              <circle class="patch-led" cx="125" cy="108" r="3.5"/>
+              <!-- química -->
+              <g class="chem">
+                <path class="drop" d="M36 34c6 9 9 13 9 17a9 9 0 0 1-18 0c0-4 3-8 9-17z"/>
+                <text x="36" y="84" text-anchor="middle">sudor</text>
+                <rect class="cube" x="98" y="34" width="22" height="22" rx="3"/>
+                <text x="109" y="84" text-anchor="middle">glucosa</text>
+                <path class="fiber" d="M170 34c12 4 18 12 18 22M178 30c12 6 16 14 16 24"/>
+                <text x="184" y="84" text-anchor="middle">lactato</text>
+              </g>
+              <!-- señal -->
+              <path class="signal" d="M220 70 q14 -14 28 0 M226 58 q22 -24 44 0"/>
+              <!-- celular -->
+              <rect class="phone" x="276" y="28" width="66" height="120" rx="10"/>
+              <rect class="screen-i" x="284" y="42" width="50" height="78" rx="4"/>
+              <text class="phone-t" x="309" y="72" text-anchor="middle">≈ 1,2 L</text>
+              <text class="phone-s" x="309" y="90" text-anchor="middle">±17%</text>
+            </svg>
+          </figure>
+          <p class="story-text">Son <strong>parches pequeños</strong> que leen la química de tu cuerpo (el sudor, la glucosa o el lactato de tus músculos) y mandan una <strong>estimación</strong> al celular, todo el tiempo y sin que dejes de hacer lo tuyo.</p>
+          <p class="story-text small">El Foro Económico Mundial los eligió entre las 10 tecnologías emergentes de 2025.</p>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-ghost" data-skip>Saltar intro</button>
+          <span class="card-step">1 / 3</span>
+          <button class="btn btn-ink" data-next="scrIntro2">Siguiente <span class="key">Enter</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Intro 2: el caso Nix -->
+    <section class="screen" id="scrIntro2" aria-labelledby="i2H">
+      <div class="story-card card-oxblood">
+        <h2 id="i2H">Nix: el parche que lee tu sudor</h2>
+        <div class="story-body">
+          <ol class="steps">
+            <li>
+              <svg viewBox="0 0 110 80" class="fig-ink" aria-hidden="true">
+                <rect class="patch" x="7" y="11" width="96" height="58" rx="14"/>
+                <path class="channel" d="M21 40 h68"/>
+                <rect class="electrode" x="37" y="31" width="6" height="18"/>
+                <rect class="electrode" x="47" y="31" width="6" height="18"/>
+                <rect class="electrode" x="65" y="31" width="6" height="18"/>
+                <rect class="electrode" x="75" y="31" width="6" height="18"/>
+                <path class="drop" d="M21 18c4 6 6 9 6 11a6 6 0 0 1-12 0c0-2 2-5 6-11z"/>
+              </svg>
+              <span>El sudor entra a un canal con electrodos</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 110 80" class="fig-ink" aria-hidden="true">
+                <rect class="chip" x="17" y="11" width="76" height="58" rx="6"/>
+                <path class="wave" d="M27 47 l10 -14 10 20 10 -26 10 18 10 -6"/>
+              </svg>
+              <span>Un algoritmo estima el agua y la sal que perdiste</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 110 80" class="fig-ink" aria-hidden="true">
+                <rect class="phone" x="31" y="3" width="48" height="74" rx="8"/>
+                <rect class="screen-i" x="37" y="12" width="36" height="50" rx="3"/>
+                <text class="phone-t sm" x="55" y="33" text-anchor="middle">toma</text>
+                <text class="phone-t" x="55" y="51" text-anchor="middle">600 ml</text>
+              </svg>
+              <span>La app te dice cuánto tomar</span>
+            </li>
+            <li class="step-err">
+              <svg viewBox="0 0 110 80" class="fig-ink" aria-hidden="true">
+                <rect class="err" x="5" y="9" width="100" height="62" rx="6"/>
+                <text class="err-big" x="55" y="45" text-anchor="middle">±17%</text>
+              </svg>
+              <span>Pero estima: su error medio es de 17%</span>
+            </li>
+          </ol>
+          <p class="story-text">Desde 2022, la empresa <strong>Nix</strong> (Boston) vende un parche que va en el bíceps de corredores y ciclistas. En las pruebas del fabricante, su estimación de líquido perdido se equivocó en promedio un <strong>17%</strong>. Además, solo es para uso recreativo y <strong>no es resistente al agua</strong>.</p>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-ghost" data-skip>Saltar intro</button>
+          <span class="card-step">2 / 3</span>
+          <button class="btn btn-ink" data-next="scrIntro3">Siguiente <span class="key">Enter</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Intro 3: cómo se juega -->
+    <section class="screen" id="scrIntro3" aria-labelledby="i3H">
+      <div class="story-card card-mustard">
+        <h2 id="i3H">Llega al mirador antes de 2:00</h2>
+        <div class="howto">
+          <div class="howto-row">
+            <span class="keys"><span class="key big">←</span><span class="key big">→</span></span>
+            <p>Cambia de carril con las flechas (o desliza el dedo en el celular).</p>
+          </div>
+          <ul class="pickups">
+            <li><canvas class="pk" data-pk="hyd" width="72" height="72"></canvas><b>Agua</b><span>sube tu hidratación</span></li>
+            <li><canvas class="pk" data-pk="en" width="72" height="72"></canvas><b>Chocolate</b><span>sube tu energía</span></li>
+            <li><canvas class="pk" data-pk="fat" width="72" height="72"></canvas><b>Viento a favor</b><span>baja tu fatiga</span></li>
+          </ul>
+          <p class="howto-warn">Si tomas o comes de más, te pesa y vas más lento. Si algo se te acaba, te bajas de la bici y caminas.</p>
+          <p class="howto-key"><strong>Tu parche te dice cómo vas, pero estima.</strong> Mira también al ciclista: su cuerpo también te avisa.</p>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-ghost" data-back="scrIntro2">Atrás</button>
+          <span class="card-step">3 / 3</span>
+          <button class="btn btn-ink" id="btnGo">¡A pedalear! <span class="key">Enter</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Evento -->
+    <section class="screen" id="scrEvent" aria-labelledby="evH" role="alertdialog">
+      <div class="event-card card-oxblood" id="eventCard">
+        <h2 id="evH">—</h2>
+        <p class="story-text" id="evBody">—</p>
+        <p class="event-q" id="evQ"></p>
+        <div class="card-actions">
+          <button class="btn btn-ink" id="btnEvent">Seguir pedaleando <span class="key">Enter</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pausa -->
+    <section class="screen" id="scrPause" aria-labelledby="pzH">
+      <div class="event-card card-teal">
+        <h2 id="pzH">En pausa</h2>
+        <div class="card-actions">
+          <button class="btn btn-ghost" id="btnRestart">Reiniciar</button>
+          <button class="btn btn-ink" id="btnResume">Seguir <span class="key">Enter</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final -->
+    <section class="screen scroll" id="scrEnd" aria-labelledby="endH">
+      <div class="end-wrap">
+        <div class="end-head card-mustard">
+          <h2 id="endH">Mirador alcanzado</h2>
+          <p class="end-time"><span id="endTime">0:00</span> <span class="end-goal" id="endGoal">meta 2:00</span></p>
+        </div>
+
+        <div class="end-grid">
+          <article class="end-panel chart-panel">
+            <h3>Lo que estimó tu parche vs. lo que pasaba de verdad</h3>
+            <div class="chart-tabs" role="tablist" aria-label="Indicador">
+              <button role="tab" class="tab active" data-chart="hyd" aria-selected="true">Hidratación</button>
+              <button role="tab" class="tab" data-chart="en" aria-selected="false">Energía</button>
+              <button role="tab" class="tab" data-chart="fat" aria-selected="false">Fatiga</button>
+            </div>
+            <canvas id="chart" width="720" height="300" aria-label="Gráfico de lo real versus lo estimado"></canvas>
+            <ul class="legend">
+              <li><i class="lg-real"></i>Tu cuerpo (real)</li>
+              <li><i class="lg-est"></i>Lo que estimó el parche</li>
+              <li><i class="lg-off"></i>Sin señal</li>
+            </ul>
+            <p class="chart-note" id="chartNote">—</p>
+          </article>
+
+          <article class="end-panel type-panel">
+            <h3 class="type-name" id="typeName">—</h3>
+            <p class="type-label">Así decidiste en la ruta</p>
+            <p class="type-text" id="typeText">—</p>
+            <dl class="type-stats" id="typeStats"></dl>
+          </article>
+        </div>
+
+        <article class="stance card-ink" aria-labelledby="stanceH">
+          <h3 id="stanceH">Decide con el dato,<br>no por el dato.</h3>
+          <p>Estoy a favor de estos sensores: un parche pequeño puede acompañarte sin interrumpir lo que haces y avisarte antes de un problema, incluso en lugares lejanos. Pero el sensor estima, no adivina: hay que saber qué mide, cuánto puede equivocarse y en qué situaciones deja de ser útil. Si obedecemos cada alerta sin mirarnos, el monitoreo nos quita autonomía en vez de dárnosla.</p>
+          <p class="stance-q">Me queda una pregunta: ¿cómo logramos que un monitoreo constante aumente nuestra autonomía sin generar dependencia de las mediciones?</p>
+          <p class="stance-sign">Joaquín Castillo</p>
+          <p class="stance-rai"><b>Responsible AI:</b> un algoritmo convierte tu sudor en un número. Alguien tiene que supervisar esa estimación, y ese alguien eres tú.</p>
+        </article>
+
+        <div class="end-actions">
+          <button class="btn btn-ink" id="btnAgain">Jugar de nuevo <span class="key">Enter</span></button>
+        </div>
+
+        <footer class="sources">
+          <p><b>Fuentes</b> (del informe previo): Nix Biosensors, validación y FAQ (2022–2026) · World Economic Forum &amp; Frontiers, <i>Top 10 Emerging Technologies of 2025</i> · Estudio de East Carolina University con trabajadores agrícolas (2026) · Parche de microagujas de UC San Diego (2022). Los valores del juego son una simulación basada en estos datos.</p>
+        </footer>
+      </div>
+    </section>
+
+  </main>
+
+  <noscript><p class="noscript">Este juego necesita JavaScript activado.</p></noscript>
+  <script src="audio.js"></script>
+  <script src="game.js"></script>
 </body>
 </html>
