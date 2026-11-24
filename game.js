@@ -130,7 +130,7 @@
   // ---------------- Canvas y fondos ----------------
   const cv = $('#world');
   let ctx = cv.getContext('2d');
-  let W = 0, H = 0, DPR = 1, HZ = 0, U = 1, CAM_H = 1000, RW = 300, SY = 0, unit = 20;
+  let W = 0, H = 0, DPR = 1, HZ = 0, U = 1, CAM_H = 1000, RW = 300, SY = 0, unit = 20, spriteK = 1;
   let skyC, mtnC, hillC, vignetteC, grainPat, dotPat;
 
   function resize() {
@@ -148,6 +148,8 @@
     CAM_H = ROAD * (SY - HZ) / RW;
     U = (SY - HZ) * PLAYER_DZ / (CAM_DEPTH * CAM_H);
     unit = Math.max(RW / 9.5, H / 56);
+    // en ventanas bajas y anchas, el ciclista y los objetos no deben tapar media pantalla
+    spriteK = Math.min(1, ((SY - HZ) * 0.11) / (RW / 9.5));
     buildBackgrounds();
   }
 
@@ -448,7 +450,7 @@
     if (st.fat > 78 && !reduceMotion) { st.beatClock -= dt; if (st.beatClock <= 0) { st.beatClock = 0.75; SFX.beat(); } }
 
     // --- consejos iniciales ---
-    if (st.tips === 0 && st.raceT > 0.4) { st.tips = 1; toast('← → cambia de carril', 'o desliza el dedo', 'info', 2400); }
+    if (st.tips === 0 && st.raceT > 0.4) { st.tips = 1; toast('Cambia de carril', 'con las flechas o deslizando el dedo', 'info', 2400); }
     if (st.tips === 1 && st.raceT > 6) { st.tips = 2; toast('Recoge solo lo que te falta', 'si tomas de más, te pesa', 'info', 2400); }
     if (st.tips === 2 && st.raceT > 13) { st.tips = 3; toast('Abajo: lo que estima tu parche', 'la franja punteada es su margen de error', 'info', 2800); }
 
@@ -694,7 +696,7 @@
     ctx.save();
     ctx.beginPath(); ctx.rect(-50, -50, W + 100, s.clip + 50); ctx.clip();
     ctx.translate(p.x, p.y);
-    const u = p.w / 9.5; // misma escala que el ciclista
+    const u = (p.w / 9.5) * spriteK; // misma escala que el ciclista
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     switch (o.k) {
       case 'hyd': case 'en': case 'fat': drawPickup(o.k, u, st.t + o.t); break;
@@ -803,20 +805,21 @@
     ctx.restore();
   }
 
+  // árbol bandera: el viento patagónico dobla el tronco y empuja la copa hacia un lado
   function drawLenga(u, v) {
     const lw = Math.max(1, u * 0.12);
     ctx.strokeStyle = COL.ink; ctx.lineWidth = u * 0.5;
-    ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(u * 0.3, -u * 1.6, -u * 0.1, -u * 3.2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(u * 0.6, -u * 1.6, u * 0.9, -u * 3); ctx.stroke();
     ctx.strokeStyle = '#4a3324'; ctx.lineWidth = u * 0.3; ctx.stroke();
     const autumn = v > 0.55;
-    const tiers = [[-0.2, 3.4, 1.6], [0.3, 2.6, 1.9], [-0.4, 1.9, 1.5]];
+    const tiers = [[0.5, 3.2, 1.9], [0.9, 2.6, 1.6], [0.4, 2.0, 1.1]];
     tiers.forEach(([ox, oy, w], i) => {
-      ctx.beginPath(); ctx.ellipse(u * ox, -u * oy, u * w, u * 0.62, 0, 0, 7);
+      ctx.beginPath(); ctx.ellipse(u * (ox + 0.6), -u * oy, u * w, u * 0.5, -0.15, 0, 7);
       ctx.fillStyle = autumn ? (i % 2 ? '#b4462f' : '#c9643a') : (i % 2 ? '#4f6b3a' : '#5d7a43');
       ctx.fill(); stroke(lw);
     });
-    ctx.save(); ctx.beginPath(); ctx.ellipse(u * 0.3, -u * 2.6, u * 1.9, u * 0.62, 0, 0, 7); ctx.clip();
-    ctx.fillStyle = dotPat; ctx.fillRect(0, -u * 3.4, u * 2.4, u * 1.4); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.ellipse(u * 1.5, -u * 2.6, u * 1.6, u * 0.5, -0.15, 0, 7); ctx.clip();
+    ctx.fillStyle = dotPat; ctx.fillRect(u * 1.2, -u * 3.2, u * 2.2, u * 1.4); ctx.restore();
   }
 
   function drawCalafate(u) {
@@ -856,7 +859,7 @@
   // ---------- Ciclista ----------
   function drawPlayer(s, pz, dt) {
     const p = screenAt(s, pz, st.off);
-    const u = p.w / 9.5;
+    const u = (p.w / 9.5) * spriteK;
     ctx.save();
     ctx.translate(p.x, p.y);
     // sombra
@@ -1196,6 +1199,8 @@
     clearToasts();
     SFX.fanfare(); SFX.setIntensity(0.5);
     setPlayUI(false);
+    // después de la primera partida ya se puede saltar la intro
+    $$('[data-skip]').forEach(b => b.classList.remove('hidden'));
     buildEnd();
     show('scrEnd');
   }
@@ -1389,6 +1394,8 @@
   resize();
   st.z = 30 * SEG;
   paintIcons();
+  // la primera vez la intro no se salta: ahí se explica la tecnología y el caso Nix
+  $$('[data-skip]').forEach(b => b.classList.add('hidden'));
   // Modo de prueba: ?debug expone el estado para avanzar cuadros a mano
   if (/[?&]debug/.test(location.search)) {
     window.__subida = {

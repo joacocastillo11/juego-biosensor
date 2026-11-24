@@ -246,7 +246,7 @@ button { font: inherit; color: inherit; }
 .steps li { position: relative; display: grid; justify-items: center; align-content: start; gap: 6px; text-align: center; counter-increment: step; }
 .steps li svg { width: 100%; max-width: 120px; height: auto; }
 .steps li span { font-size: 1rem; line-height: 1.2; font-weight: 600; }
-.steps li:not(.step-err) span::before { content: counter(step) ". "; font-family: var(--f-data); font-weight: 700; color: var(--mustard); }
+.steps li:not(.step-err) span::before { content: counter(step) ". "; font-family: var(--f-data); font-weight: 700; color: var(--bone); }
 .steps li:not(:last-child)::after {
   content: ""; position: absolute; right: -9px; top: 26px;
   width: 9px; height: 14px;
@@ -268,10 +268,7 @@ button { font: inherit; color: inherit; }
 .pickups { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .pickups li {
   display: grid; justify-items: center; text-align: center; gap: 2px;
-  background: rgba(20, 27, 45, .1);
-  border: 2px solid var(--ink);
-  border-radius: 14px;
-  padding: 8px 6px 10px;
+  padding: 4px 6px 6px;
 }
 .pickups canvas { width: 64px; height: 64px; }
 .pickups b { font-family: var(--f-display); font-weight: 400; font-size: 1.5rem; text-transform: uppercase; line-height: 1; }
@@ -294,7 +291,10 @@ button { font: inherit; color: inherit; }
   z-index: 10;
   pointer-events: none;
 }
-#topbar .top-actions { display: flex; gap: 8px; pointer-events: auto; }
+#topbar .top-actions { display: flex; gap: 8px; pointer-events: auto; margin-right: 54px; }
+#btnMute { position: fixed; top: max(10px, env(safe-area-inset-top)); right: 16px; z-index: 30; }
+#scrEnd { padding-top: 72px; }
+#scrEnd, .story-card, .event-card { scrollbar-width: thin; scrollbar-color: var(--mustard) transparent; }
 .clock {
   background: var(--ink);
   border: var(--line) solid var(--ink);
@@ -513,7 +513,7 @@ button { font: inherit; color: inherit; }
 .stance { border-radius: 16px; padding: 26px 30px; }
 .stance h3 { font-family: var(--f-display); font-weight: 400; font-size: clamp(2.8rem, 8vw, 5.4rem); line-height: .88; text-transform: uppercase; margin: 0 0 16px; color: var(--mustard); text-wrap: balance; }
 .stance p { font-size: 1.25rem; max-width: 68ch; margin: 0 0 12px; text-wrap: pretty; }
-.stance .stance-q { font-style: italic; font-size: 1.3rem; border-left: 0; padding: 12px 16px; background: rgba(242, 232, 213, .08); border-radius: 10px; }
+.stance .stance-q { font-style: italic; font-size: 1.35rem; padding: 0; background: none; color: var(--bone); }
 .stance .stance-sign { font-family: var(--f-display); font-size: 1.6rem; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 14px; }
 .stance .stance-rai { font-size: 1.05rem; color: var(--bone-dim); border-top: 2px solid rgba(242, 232, 213, .2); padding-top: 12px; margin: 0; }
 .stance .stance-rai b { color: var(--turq); }
@@ -528,7 +528,11 @@ button { font: inherit; color: inherit; }
 @media (max-width: 760px) {
   body { font-size: 16px; }
   #hud { padding: 6px 10px max(8px, env(safe-area-inset-bottom)); border-radius: 14px 14px 0 0; }
-  .hud-note { display: none; }
+  .hud-head { font-size: .72rem; }
+  .hn-long { display: none; }
+  .g-src { white-space: normal; line-height: 1; }
+  #btnMute { right: 10px; }
+  #topbar .top-actions { margin-right: 48px; }
   .gauges { grid-template-columns: 1fr; gap: 4px; }
   .gauge { grid-template-columns: 24px 92px 1fr 54px; grid-template-areas: "ico text bar val"; column-gap: 8px; }
   .g-ico { width: 22px; height: 22px; }

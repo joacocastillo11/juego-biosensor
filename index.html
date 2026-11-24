@@ -37,12 +37,14 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
       <button class="icon-btn" id="btnPause" aria-label="Pausar">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
       </button>
-      <button class="icon-btn" id="btnMute" aria-label="Silenciar música">
-        <svg class="ico-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>
-        <svg class="ico-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
-      </button>
     </div>
   </div>
+
+  <!-- Sonido: visible en todas las pantallas -->
+  <button class="icon-btn" id="btnMute" aria-label="Silenciar sonido">
+    <svg class="ico-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+    <svg class="ico-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
+  </button>
 
   <!-- Mensajes cortos durante la carrera -->
   <div id="toast" role="status" aria-live="polite"></div>
@@ -52,7 +54,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     <header class="hud-head">
       <span class="led" id="led"></span>
       <span class="hud-title">Tu parche · <span id="hudState">en vivo</span></span>
-      <span class="hud-note">lo que <em>estima</em> el sensor</span>
+      <span class="hud-note">lo que <em>estima</em><span class="hn-long"> el sensor</span></span>
     </header>
     <div class="gauges">
       <div class="gauge" data-k="hyd">
@@ -175,8 +177,8 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
             </li>
             <li>
               <svg viewBox="0 0 110 80" class="fig-ink" aria-hidden="true">
-                <rect class="phone" x="31" y="3" width="48" height="74" rx="8"/>
-                <rect class="screen-i" x="37" y="12" width="36" height="50" rx="3"/>
+                <rect class="phone" x="22" y="3" width="66" height="74" rx="8"/>
+                <rect class="screen-i" x="28" y="12" width="54" height="50" rx="3"/>
                 <text class="phone-t sm" x="55" y="33" text-anchor="middle">toma</text>
                 <text class="phone-t" x="55" y="51" text-anchor="middle">600 ml</text>
               </svg>
@@ -294,7 +296,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
         </div>
 
         <footer class="sources">
-          <p><b>Fuentes</b> (del informe previo): Nix Biosensors, validación y FAQ (2022–2026) · World Economic Forum &amp; Frontiers, <i>Top 10 Emerging Technologies of 2025</i> · Estudio de East Carolina University con trabajadores agrícolas (2026) · Parche de microagujas de UC San Diego (2022). Los valores del juego son una simulación basada en estos datos.</p>
+          <p><b>Fuentes</b> (del informe previo): Nix Biosensors, validación y FAQ (2022–2026) · World Economic Forum &amp; Frontiers, <i>Top 10 Emerging Technologies of 2025</i> · Estudio de East Carolina University con trabajadores agrícolas (2026) · Parche de microagujas de UC San Diego (2022). Los valores del juego son una simulación basada en estos datos: el ±17% viene de la validación del fabricante de Nix; los márgenes ±8 (glucosa) y ±22 (lactato) son ilustrativos, para mostrar que un sensor experimental se equivoca más.</p>
         </footer>
       </div>
     </section>
