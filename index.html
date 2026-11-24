@@ -71,7 +71,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
           <span class="g-name">Hidratación</span>
           <span class="g-tip"></span><span class="g-src">sudor · Nix</span>
         </div>
-        <div class="g-bar"><span class="g-danger"></span><span class="g-full"><i>te sobra</i></span><span class="g-band"></span><span class="g-tick"></span><span class="g-off">sin señal</span></div>
+        <div class="g-bar"><span class="g-track"><span class="g-danger"></span><span class="g-full"></span><span class="g-band"></span></span><span class="g-tick"></span><span class="g-off">sin señal</span></div>
         <div class="g-val"><b>--</b><small>±17</small></div>
       </div>
       <div class="gauge" data-k="en">
@@ -80,7 +80,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
           <span class="g-name">Energía</span>
           <span class="g-tip"></span><span class="g-src">glucosa</span>
         </div>
-        <div class="g-bar"><span class="g-danger"></span><span class="g-full"><i>te sobra</i></span><span class="g-band"></span><span class="g-tick"></span><span class="g-off">sin señal</span></div>
+        <div class="g-bar"><span class="g-track"><span class="g-danger"></span><span class="g-full"></span><span class="g-band"></span></span><span class="g-tick"></span><span class="g-off">sin señal</span></div>
         <div class="g-val"><b>--</b><small>±8</small></div>
       </div>
       <div class="gauge" data-k="fat">
@@ -89,7 +89,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
           <span class="g-name">Fatiga</span>
           <span class="g-tip"></span><span class="g-src">lactato · experimental</span>
         </div>
-        <div class="g-bar fat"><span class="g-danger"></span><span class="g-full"><i>te sobra</i></span><span class="g-band"></span><span class="g-tick"></span><span class="g-off">sin señal</span></div>
+        <div class="g-bar fat"><span class="g-track"><span class="g-danger"></span><span class="g-full"></span><span class="g-band"></span></span><span class="g-tick"></span><span class="g-off">sin señal</span></div>
         <div class="g-val"><b>--</b><small>±22</small></div>
       </div>
     </div>
@@ -224,10 +224,14 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
             <li><canvas class="pk" data-pk="en" width="72" height="72"></canvas><b>Chocolate</b><span>sube tu energía</span></li>
             <li><canvas class="pk" data-pk="fat" width="72" height="72"></canvas><b>Viento a favor</b><span>baja tu fatiga</span></li>
           </ul>
-          <div class="mini-gauge" aria-hidden="true">
-            <span class="mg-red">te falta</span><span class="mg-ok">vas bien</span><span class="mg-yel">te sobra</span>
+          <div class="mini-demo" aria-hidden="true">
+            <div class="mg-bar">
+              <span class="mg-track"><span class="mg-red"></span><span class="mg-yel"></span><span class="mg-band"></span></span>
+              <span class="mg-tick"></span>
+            </div>
+            <div class="mg-labels"><span class="l-red">Zona roja: te falta</span><span class="l-yel">Zona amarilla: no recojas más</span></div>
           </div>
-          <p class="howto-warn">En cada barra, la <b>franja roja</b> dice que te falta: recoge. La <b>franja amarilla</b> dice que estás lleno: si recoges ahí, te sobra, te pesa y vas más lento. Si algo se te acaba, te bajas de la bici y caminas.</p>
+          <p class="howto-warn">Fíjate en la <b>marca blanca</b> de cada barra. Si está en la <b>zona roja</b>, te falta: recoge ese consumible. Si está dentro de la <b>zona amarilla</b>, ya estás lleno: <b>no recojas más de ese consumible</b>, porque te sobra, te pesa y vas más lento. Si algo se te acaba, te bajas de la bici y caminas.</p>
           <p class="howto-key"><strong>Tu parche te dice cómo vas, pero estima.</strong> Mira también al ciclista: su cuerpo también te avisa.</p>
         </div>
         <div class="card-actions">
@@ -284,6 +288,8 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
             <ul class="legend">
               <li><i class="lg-real"></i>Tu cuerpo (real)</li>
               <li><i class="lg-est"></i>Lo que estimó el parche</li>
+              <li><i class="lg-dot"></i>Recogiste algo</li>
+              <li><i class="lg-dot bad"></i>Te sobró</li>
               <li><i class="lg-off"></i>Sin señal</li>
             </ul>
             <p class="chart-note" id="chartNote">—</p>

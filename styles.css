@@ -276,18 +276,17 @@ button { font: inherit; color: inherit; }
 .pickups b { font-family: var(--f-display); font-weight: 400; font-size: 1.5rem; text-transform: uppercase; line-height: 1; }
 .pickups span { font-size: 1rem; }
 .howto-warn, .howto-key { margin: 0; font-size: 1.1rem; max-width: 64ch; }
-.mini-gauge {
-  display: grid; grid-template-columns: 30fr 54fr 16fr;
-  height: 30px;
-  border: var(--line) solid var(--ink);
-  border-radius: 999px;
-  overflow: hidden;
-  font-family: var(--f-data); font-size: .8rem; font-weight: 700; text-transform: uppercase;
-}
-.mini-gauge span { display: grid; place-items: center; white-space: nowrap; }
-.mg-red { background: repeating-linear-gradient(-45deg, rgba(226, 85, 63, .85) 0 6px, rgba(226, 85, 63, .5) 6px 12px); color: var(--ink); }
-.mg-ok { background: var(--bone); color: var(--ink); }
-.mg-yel { background: repeating-linear-gradient(45deg, #f2cf5b 0 6px, var(--mustard-deep) 6px 12px); color: var(--ink); border-left: 2px solid var(--ink); }
+/* barra de ejemplo en las instrucciones: igual a la del HUD */
+.mini-demo { background: var(--ink); color: var(--bone); border-radius: 12px; padding: 14px 16px 10px; }
+.mg-bar { position: relative; height: 22px; }
+.mg-track { position: absolute; inset: 0; border: 2.5px solid var(--bone); border-radius: 999px; background: #2a3350; overflow: hidden; box-shadow: 0 0 0 2px var(--mustard), 0 0 14px rgba(232, 185, 47, .55); }
+.mg-red { position: absolute; top: 0; bottom: 0; left: 0; width: 30%; background: #6e2f34; box-shadow: inset -2px 0 0 var(--danger); }
+.mg-yel { position: absolute; top: 0; bottom: 0; left: 84%; right: 0; background: var(--mustard); }
+.mg-band { position: absolute; top: 4px; bottom: 4px; left: 83%; right: 5%; border-radius: 999px; background-color: rgba(63, 184, 175, .55); background-image: radial-gradient(circle, #9be3dc 1.1px, transparent 1.6px); background-size: 5px 5px; }
+.mg-tick { position: absolute; top: -5px; bottom: -5px; left: calc(89% - 3.5px); width: 7px; background: var(--bone); border: 2px solid var(--ink); border-radius: 4px; }
+.mg-labels { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; font-family: var(--f-data); font-size: .8rem; font-weight: 700; text-transform: uppercase; }
+.mg-labels .l-red { color: #ffb4a6; }
+.mg-labels .l-yel { color: var(--mustard); text-align: right; }
 .howto-key { background: var(--ink); color: var(--bone); padding: 10px 14px; border-radius: 10px; }
 
 /* Evento */
@@ -417,33 +416,40 @@ button { font: inherit; color: inherit; }
 .g-val { grid-area: val; font-family: var(--f-data); text-align: right; line-height: 1; }
 .g-val b { font-size: 1.6rem; font-variant-numeric: tabular-nums; }
 .g-val small { display: block; font-size: .8rem; color: var(--mustard); font-weight: 700; }
+/* Barra del sensor: pista con zonas de color planas; la marca va por fuera para no recortarse */
 .g-bar {
   grid-area: bar;
   position: relative;
-  height: 18px;
+  height: 20px;
+  container-type: inline-size;
+}
+.g-track {
+  position: absolute; inset: 0;
   border: 2.5px solid var(--bone);
   border-radius: 999px;
-  background: rgba(242, 232, 213, .08);
+  background: #2a3350;
   overflow: hidden;
+  transition: box-shadow .25s;
 }
 .g-danger {
   position: absolute; top: 0; bottom: 0; left: 0; width: 30%;
-  background: repeating-linear-gradient(-45deg, rgba(226, 85, 63, .55) 0 5px, transparent 5px 10px);
+  background: #6e2f34;
+  box-shadow: inset -2px 0 0 var(--danger);
 }
-.g-bar.fat .g-danger { left: auto; right: 0; }
-/* franja de exceso: si recoges con la marca aquí, te sobra */
+.g-bar.fat .g-danger { left: auto; right: 0; box-shadow: inset 2px 0 0 var(--danger); }
+/* zona amarilla: con la marca aquí, ya estás lleno y no conviene recoger más */
 .g-full {
   position: absolute; top: 0; bottom: 0;
   left: var(--full, 86%); right: 0;
-  display: flex; align-items: center; justify-content: center;
-  background: repeating-linear-gradient(45deg, rgba(232, 185, 47, .6) 0 5px, rgba(232, 185, 47, .15) 5px 10px);
+  background: #6b5a24;
   box-shadow: inset 2px 0 0 var(--mustard);
   transition: background-color .25s;
 }
 .g-bar.fat .g-full { left: 0; right: auto; width: var(--full, 20%); box-shadow: inset -2px 0 0 var(--mustard); }
-.g-full i { font-style: normal; font-family: var(--f-data); font-size: .62rem; font-weight: 700; color: var(--ink); white-space: nowrap; text-transform: uppercase; letter-spacing: .02em; background: var(--mustard); padding: 0 3px; border-radius: 3px; }
-.gauge.full .g-full { background: var(--mustard); animation: full-pulse .9s ease-in-out infinite alternate; }
-@keyframes full-pulse { to { background-color: #ffd65a; } }
+.gauge.full .g-full { background: var(--mustard); }
+.gauge.full .g-track { box-shadow: 0 0 0 2px var(--mustard), 0 0 14px rgba(232, 185, 47, .55); }
+.gauge.alert .g-danger { background: #b9433a; }
+.gauge.alert .g-track { box-shadow: 0 0 0 2px var(--danger), 0 0 14px rgba(226, 85, 63, .5); }
 .g-tip { display: none; font-family: var(--f-data); font-size: .78rem; font-weight: 700; text-transform: uppercase; line-height: 1.05; }
 .gauge.full .g-tip, .gauge.alert .g-tip { display: block; }
 .gauge.full .g-src, .gauge.alert .g-src { display: none; }
@@ -451,26 +457,29 @@ button { font: inherit; color: inherit; }
 .gauge.alert .g-tip { color: #ffb4a6; }
 .gauge.off .g-tip { display: none; }
 .gauge.off .g-src { display: block; }
-.g-bar { container-type: inline-size; }
+/* margen de error: franja turquesa punteada, por encima de las zonas */
 .g-band {
-  position: absolute; inset: 2px;
-  background-color: rgba(63, 184, 175, .45);
-  background-image: radial-gradient(circle, rgba(63, 184, 175, 1) 1.1px, transparent 1.6px);
+  position: absolute; inset: 3px 0;
+  background-color: rgba(63, 184, 175, .55);
+  background-image: radial-gradient(circle, #9be3dc 1.1px, transparent 1.6px);
   background-size: 5px 5px;
   clip-path: inset(0 calc(100% - var(--hi, 60%)) 0 var(--lo, 40%) round 999px);
   transition: clip-path .35s var(--ease-out);
 }
+/* la estimación: marca blanca con borde de tinta que sobresale de la pista */
 .g-tick {
-  position: absolute; top: -2px; bottom: -2px; left: 0;
-  width: 4px;
+  position: absolute; top: -5px; bottom: -5px; left: 0;
+  width: 7px;
   background: var(--bone);
-  border-radius: 2px;
-  box-shadow: 0 0 0 1.5px var(--ink);
-  transform: translateX(calc(var(--x, 50) * 1cqw - 2px));
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  transform: translateX(calc(2.5px + (100cqw - 5px) * var(--x, 50) / 100 - 3.5px));
   transition: transform .35s var(--ease-out);
 }
 .g-off {
   position: absolute; inset: 0;
+  border-radius: 999px;
+  overflow: hidden;
   display: none;
   align-items: center; justify-content: center;
   font-family: var(--f-data); font-size: .74rem; font-weight: 700;
@@ -575,6 +584,8 @@ button { font: inherit; color: inherit; }
 .legend i { display: inline-block; width: 22px; height: 4px; margin-right: 6px; vertical-align: middle; border-radius: 2px; }
 .lg-real { background: var(--ink); }
 .lg-est { background: repeating-linear-gradient(90deg, var(--teal) 0 6px, transparent 6px 10px); }
+.legend .lg-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--turq); border: 2px solid var(--ink); }
+.legend .lg-dot.bad { background: var(--danger); }
 .lg-off { height: 12px !important; border: 2px solid var(--ink); background: repeating-linear-gradient(-45deg, rgba(163, 50, 42, .5) 0 3px, transparent 3px 6px); }
 .chart-note { margin: 8px 0 0; font-size: 1.08rem; font-weight: 600; }
 .type-panel { --card: var(--teal); --card-fg: var(--bone); display: flex; flex-direction: column; }
@@ -605,9 +616,8 @@ button { font: inherit; color: inherit; }
   .hud-head { font-size: .72rem; }
   .hn-long { display: none; }
   .g-src { white-space: normal; line-height: 1; }
-  .g-full i { display: none; }
   .g-tip { font-size: .72rem; }
-  .mini-gauge { font-size: .7rem; grid-template-columns: 32fr 40fr 28fr; }
+  .mg-labels { font-size: .7rem; }
   #btnMute { right: 10px; }
   #topbar .top-actions { margin-right: 48px; }
   .gauges { grid-template-columns: 1fr; gap: 4px; }
@@ -615,7 +625,7 @@ button { font: inherit; color: inherit; }
   .g-ico { width: 22px; height: 22px; }
   .g-name { font-size: 1.15rem; }
   .g-src { font-size: .72rem; }
-  .g-bar { height: 15px; }
+  .g-bar { height: 17px; }
   .g-val b { font-size: 1.15rem; }
   .g-val small { font-size: .72rem; }
   #topbar { gap: 8px; padding-left: 10px; padding-right: 10px; }

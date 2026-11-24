@@ -84,6 +84,7 @@
     for (let i = 8; i < segs.length - 10; i++) {
       if (i % 9 === 0) segs[i].decor.push({ k: 'post', off: -1.22 }, { k: 'post', off: 1.22 });
       if (r() < 0.16) segs[i].decor.push({ k: r() < 0.55 ? 'lenga' : 'calafate', off: (r() < 0.5 ? -1 : 1) * (1.5 + r() * 2.6), v: r() });
+      if (r() < 0.22) segs[i].decor.push({ k: 'coiron', off: (r() < 0.5 ? -1 : 1) * (1.3 + r() * 3.2), v: r() });
       if (r() < 0.035) segs[i].decor.push({ k: 'boulder', off: (r() < 0.5 ? -1 : 1) * (1.45 + r() * 1.6), v: r() });
       if (r() < 0.012) segs[i].decor.push({ k: 'guanacoSide', off: (r() < 0.5 ? -1 : 1) * (2 + r() * 2), v: r() });
     }
@@ -333,6 +334,7 @@
       hyd: 82, en: 78, fat: 14, offHyd: 0, offAll: 0, heavy: 0, stun: 0, walking: false, finished: false, capped: false,
       events: { river: false, app: false }, hist: [], histClock: 0, log: [], waste: 0, crit: 0, blindCrit: 0, trustCrit: 0, blindT: 0, walkT: 0,
       grabs: 0, misled: 0, blindGood: 0, alertClock: 6, cueShown: false, tips: 0, beatClock: 0, mtn: st.mtn,
+      riverT: null, appT: null, won: false,
     });
     st.err = { hyd: 0, en: 0, fat: 0 }; st.errT = { hyd: -9, en: 4, fat: 14 }; st.errClock = { hyd: 4, en: 6, fat: 3 };
     st.est = { hyd: st.hyd, en: st.en, fat: st.fat };
@@ -460,6 +462,7 @@
     if (st.tips === 0 && st.raceT > 0.4) { st.tips = 1; toast('Cambia de carril', 'con las flechas o deslizando el dedo', 'info', 2400); }
     if (st.tips === 1 && st.raceT > 6) { st.tips = 2; toast('Recoge solo lo que te falta', 'si tomas de más, te pesa', 'info', 2400); }
     if (st.tips === 2 && st.raceT > 13) { st.tips = 3; toast('Abajo: lo que estima tu parche', 'la franja punteada es su margen de error', 'info', 2800); }
+    if (st.tips === 3 && st.raceT > 20) { st.tips = 4; toast('Marca en la zona amarilla', 'ya estás lleno: no recojas más de eso', 'info', 2800); }
 
     collide();
     events();
@@ -542,7 +545,7 @@
         body: 'Cruzaste el estero y el agua mojó el parche. Estos parches no son resistentes al agua: por unos segundos tu sensor de hidratación no podrá medir nada.',
         q: '¿Qué te dice tu cuerpo?',
         color: 'card-teal',
-        after: () => { st.offHyd = 17; st.errT.hyd = 22; st.err.hyd = 22; st.errClock.hyd = 32; },
+        after: () => { st.riverT = st.raceT; st.offHyd = 17; st.errT.hyd = 22; st.err.hyd = 22; st.errClock.hyd = 32; },
       });
     }
     if (!st.events.app && pz >= APP_SEG * SEG) {
@@ -553,7 +556,7 @@
         body: 'Sin conexión: no llegan datos de ningún sensor. En un estudio real (East Carolina University, 2026) solo se recuperaron los datos de Nix de 24 de 30 personas, por fallas de la app en Android.',
         q: 'Ahora decides tú.',
         color: 'card-oxblood',
-        after: () => { st.offAll = 15; },
+        after: () => { st.appT = st.raceT; st.offAll = 15; },
       });
     }
   }
@@ -735,6 +738,7 @@
       case 'calafate': drawCalafate(u * (1 + o.v * 0.6)); break;
       case 'post': drawPost(u); break;
       case 'reeds': drawReeds(u * (0.9 + o.v * 0.5)); break;
+      case 'coiron': drawCoiron(u * (0.7 + o.v * 0.6)); break;
       case 'stone': drawStone(u * (0.8 + o.v * 0.6)); break;
       case 'sign': drawSign(u, o.text); break;
       case 'arch': drawArch(p.w); break;
@@ -865,6 +869,19 @@
       ctx.beginPath(); ctx.moveTo(x0, 0); ctx.quadraticCurveTo(x0 + sway * 0.5, -h * 0.6, x0 + sway, -h);
       ctx.strokeStyle = COL.ink; ctx.lineWidth = Math.max(1.5, u * 0.22); ctx.stroke();
       ctx.strokeStyle = i % 2 ? '#a9a24a' : '#7f8b3a'; ctx.lineWidth = Math.max(1, u * 0.12); ctx.stroke();
+    }
+  }
+
+  // coirón: la mata de pasto dorado típica de la estepa patagónica, peinada por el viento
+  function drawCoiron(u) {
+    if (u < 1.5) return;
+    const lw = Math.max(1, u * 0.14);
+    ctx.beginPath(); ctx.ellipse(0, -u * 0.35, u * 1.1, u * 0.5, 0, Math.PI, 0); ctx.closePath();
+    ctx.fillStyle = '#b08a3e'; ctx.fill(); stroke(lw);
+    ctx.strokeStyle = '#e6c879'; ctx.lineWidth = Math.max(1, u * 0.1);
+    for (let i = 0; i < 7; i++) {
+      const x0 = (i - 3) * u * 0.28;
+      ctx.beginPath(); ctx.moveTo(x0, -u * 0.2); ctx.quadraticCurveTo(x0 + u * 0.3, -u * 1.0, x0 + u * 0.75, -u * (1.15 + (i % 3) * 0.2)); ctx.stroke();
     }
   }
 
@@ -1355,22 +1372,33 @@
     const x = c.getContext('2d');
     x.setTransform(DPR, 0, 0, DPR, 0, 0);
     x.clearRect(0, 0, cw, ch);
-    const pad = { l: 38, r: 12, t: 14, b: 26 };
+    const narrow = cw < 460;
+    const pad = { l: 40, r: narrow ? 10 : 78, t: 22, b: 26 };
     const T = Math.max(st.raceT, 1);
     const X = t => pad.l + (t / T) * (cw - pad.l - pad.r);
     const Y = v => pad.t + (1 - v / 100) * (ch - pad.t - pad.b);
     const key = { hyd: ['hyd', 'eh'], en: ['en', 'ee'], fat: ['fat', 'ef'] }[k];
     const H_ = st.hist;
-    // zona de peligro
-    x.fillStyle = 'rgba(226,85,63,.14)';
-    if (k === 'fat') x.fillRect(pad.l, Y(100), cw - pad.l - pad.r, Y(70) - Y(100));
-    else x.fillRect(pad.l, Y(30), cw - pad.l - pad.r, Y(0) - Y(30));
+    const PW = cw - pad.l - pad.r;
+    // zonas: roja (te falta) y amarilla (te sobra), las mismas que en las barras del HUD
+    const red = k === 'fat' ? [70, 100] : [0, 30];
+    const yel = k === 'fat' ? [0, FULL_AT.fat] : [FULL_AT[k], 100];
+    x.fillStyle = 'rgba(226,85,63,.16)'; x.fillRect(pad.l, Y(red[1]), PW, Y(red[0]) - Y(red[1]));
+    x.fillStyle = 'rgba(232,185,47,.22)'; x.fillRect(pad.l, Y(yel[1]), PW, Y(yel[0]) - Y(yel[1]));
+    x.strokeStyle = 'rgba(163,50,42,.5)'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(pad.l, Y(k === 'fat' ? 70 : 30)); x.lineTo(pad.l + PW, Y(k === 'fat' ? 70 : 30)); x.stroke();
+    x.strokeStyle = 'rgba(201,151,26,.8)'; x.beginPath(); x.moveTo(pad.l, Y(k === 'fat' ? yel[1] : yel[0])); x.lineTo(pad.l + PW, Y(k === 'fat' ? yel[1] : yel[0])); x.stroke();
     // grilla
-    x.strokeStyle = 'rgba(20,27,45,.15)'; x.lineWidth = 1;
+    x.strokeStyle = 'rgba(20,27,45,.12)'; x.lineWidth = 1;
     x.font = '12px "Courier Prime", monospace'; x.fillStyle = COL.ink; x.textAlign = 'right'; x.textBaseline = 'middle';
-    [0, 25, 50, 75, 100].forEach(v => { x.beginPath(); x.moveTo(pad.l, Y(v)); x.lineTo(cw - pad.r, Y(v)); x.stroke(); x.fillText(v, pad.l - 6, Y(v)); });
+    [0, 25, 50, 75, 100].forEach(v => { x.beginPath(); x.moveTo(pad.l, Y(v)); x.lineTo(cw - pad.r, Y(v)); x.stroke(); x.fillText(v + '%', pad.l - 5, Y(v)); });
     x.textAlign = 'center'; x.textBaseline = 'top';
     for (let s = 0; s <= T; s += 30) x.fillText(fmt(s), X(s), ch - pad.b + 6);
+    // rótulos de zona a la derecha
+    if (!narrow) {
+      x.textAlign = 'left'; x.textBaseline = 'middle'; x.font = 'bold 12px "Courier Prime", monospace';
+      x.fillStyle = COL.oxblood; x.fillText('te falta', pad.l + PW + 8, Y((red[0] + red[1]) / 2));
+      x.fillStyle = '#8a6a10'; x.fillText('te sobra', pad.l + PW + 8, Y((yel[0] + yel[1]) / 2));
+    }
     // ventanas sin señal
     let start = null; const windows = [];
     H_.forEach((p, i) => {
@@ -1380,11 +1408,18 @@
     });
     windows.forEach(([a, b]) => {
       x.save(); x.beginPath(); x.rect(X(a), pad.t, Math.max(2, X(b) - X(a)), ch - pad.t - pad.b); x.clip();
-      x.strokeStyle = 'rgba(163,50,42,.45)'; x.lineWidth = 2;
+      x.fillStyle = 'rgba(20,27,45,.06)'; x.fillRect(0, 0, cw, ch);
+      x.strokeStyle = 'rgba(163,50,42,.4)'; x.lineWidth = 2;
       for (let q = -ch; q < cw; q += 8) { x.beginPath(); x.moveTo(q, ch); x.lineTo(q + ch, 0); x.stroke(); }
       x.restore();
-      x.fillStyle = COL.oxblood; x.font = 'bold 12px "Courier Prime", monospace'; x.textAlign = 'center'; x.textBaseline = 'top';
-      x.fillText('sin señal', (X(a) + X(b)) / 2, pad.t + 2);
+      // qué causó el apagón: el estero o la app
+      const near = (t0) => t0 !== null && Math.abs(t0 - a) < 2;
+      const label = near(st.riverT) ? 'estero' : near(st.appT) ? 'app caída' : 'sin señal';
+      x.font = 'bold 12px "Courier Prime", monospace'; x.textAlign = 'center'; x.textBaseline = 'top';
+      const lx = (X(a) + X(b)) / 2, tw = x.measureText(label).width + 10;
+      x.fillStyle = COL.oxblood; x.beginPath();
+      if (x.roundRect) x.roundRect(lx - tw / 2, 3, tw, 16, 4); else x.rect(lx - tw / 2, 3, tw, 16);
+      x.fill(); x.fillStyle = COL.bone; x.fillText(label, lx, 5);
     });
     // banda de error del parche
     const E = ERR[k];
@@ -1405,18 +1440,25 @@
     // valor real
     x.beginPath(); H_.forEach((p, i) => (i ? x.lineTo : x.moveTo).call(x, X(p.t), Y(p[key[0]])));
     x.strokeStyle = COL.ink; x.lineWidth = 3.5; x.lineJoin = 'round'; x.stroke();
-    // recogidas
+    // recogidas: punto de color si te servía, rojo con cruz si te sobró
+    let wasted = 0;
     st.log.filter(l => l.k === k).forEach(l => {
-      x.beginPath(); x.arc(X(l.t), Y(l.real), 5.5, 0, 7);
-      x.fillStyle = k === 'hyd' ? COL.turq : k === 'en' ? COL.mustard : COL.bone; x.fill();
+      const over = k === 'fat' ? l.real - GAIN.fat < -10 : l.real + GAIN[k] > 112;
+      if (over) wasted++;
+      const px = X(l.t), py = Y(l.real);
+      x.beginPath(); x.arc(px, py, over ? 7 : 5.5, 0, 7);
+      x.fillStyle = over ? COL.danger : k === 'hyd' ? COL.turq : k === 'en' ? COL.mustard : COL.bone; x.fill();
       x.strokeStyle = COL.ink; x.lineWidth = 2; x.stroke();
+      if (over) { x.strokeStyle = COL.bone; x.lineWidth = 2; x.beginPath(); x.moveTo(px - 3, py - 3); x.lineTo(px + 3, py + 3); x.moveTo(px + 3, py - 3); x.lineTo(px - 3, py + 3); x.stroke(); }
     });
     // nota
     let maxErr = 0;
     H_.forEach(p => { if (p[key[1]] !== null) maxErr = Math.max(maxErr, Math.abs(p[key[1]] - p[key[0]])); });
     const offT = windows.reduce((a, [s, e]) => a + (e - s), 0);
     const src = k === 'hyd' ? 'Tu parche de sudor' : k === 'en' ? 'Tu sensor de glucosa' : 'Tu sensor de lactato (experimental)';
-    $('#chartNote').textContent = `${src} se equivocó hasta ${Math.round(maxErr)} puntos y estuvo ${Math.round(offT)} segundos sin señal. Los puntos marcan cuándo recogiste algo.`;
+    const what = k === 'hyd' ? 'agua' : k === 'en' ? 'chocolate' : 'viento';
+    const extra = wasted ? ` ${wasted === 1 ? 'Una vez recogiste' : wasted + ' veces recogiste'} ${what} cuando ya estabas lleno (punto rojo).` : '';
+    $('#chartNote').textContent = `${src} se equivocó hasta ${Math.round(maxErr)} puntos y estuvo ${Math.round(offT)} segundos sin señal.${extra}`;
   }
 
   // ---------------- Íconos de la intro ----------------
