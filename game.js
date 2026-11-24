@@ -76,7 +76,8 @@
     addRoad(40, 140, 40, 0, 10);
     addRoad(40, 200, 40, 0, 0);
     addRoad(50, 120, 50, 0, 0);
-    for (let i = RIVER_SEG - 4; i <= RIVER_SEG + 6; i++) segs[i].water = true;
+    for (let i = RIVER_SEG - 6; i <= RIVER_SEG + 11; i++) segs[i].water = true;
+    for (const i of [RIVER_SEG - 9, RIVER_SEG - 8, RIVER_SEG - 7, RIVER_SEG + 12, RIVER_SEG + 13, RIVER_SEG + 14]) segs[i].bank = true;
 
     const r = rng(20261124);
     // Paisaje a los lados
@@ -88,6 +89,12 @@
     }
     segs[14].decor.push({ k: 'sign', off: -1.65, text: ['PARQUE NACIONAL', 'TORRES DEL PAINE'] });
     segs[RIVER_SEG - 40].decor.push({ k: 'sign', off: 1.65, text: ['ESTERO', 'VADO'] });
+    segs[RIVER_SEG - 16].decor.push({ k: 'sign', off: -1.65, text: ['CRUCE', 'DE AGUA'] });
+    // juncos en las orillas y piedras dentro del agua, fuera del camino
+    for (const i of [RIVER_SEG - 8, RIVER_SEG - 7, RIVER_SEG + 12, RIVER_SEG + 13]) {
+      for (const side of [-1, 1]) segs[i].decor.push({ k: 'reeds', off: side * (1.3 + r() * 2.2), v: r() }, { k: 'reeds', off: side * (3 + r() * 2), v: r() });
+    }
+    for (let i = RIVER_SEG - 5; i <= RIVER_SEG + 10; i += 3) segs[i].decor.push({ k: 'stone', off: (r() < 0.5 ? -1 : 1) * (1.4 + r() * 2.5), v: r() });
     segs[FINISH_SEG - 420].decor.push({ k: 'sign', off: -1.65, text: ['MIRADOR', '→'] });
     segs[FINISH_SEG].decor.push({ k: 'arch', off: 0 });
   }
@@ -99,7 +106,7 @@
     const pick = () => types[(r() * types.length) | 0];
     const lanes = [-1, 0, 1];
     const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = (r() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
-    const blocked = i => i > RIVER_SEG - 10 && i < RIVER_SEG + 10;
+    const blocked = i => i > RIVER_SEG - 22 && i < RIVER_SEG + 22;
     let i = 70;
     while (i < FINISH_SEG - 40) {
       if (!blocked(i)) {
@@ -523,12 +530,16 @@
 
   function events() {
     const pz = st.z + PLAYER_DZ;
-    if (!st.events.river && pz >= (RIVER_SEG + 2) * SEG) {
+    if (!st.events.riverWarn && pz >= (RIVER_SEG - 50) * SEG) {
+      st.events.riverWarn = true;
+      toast('Se viene un estero', 'lo vas a cruzar por el agua', 'info', 2600);
+    }
+    if (!st.events.splashed && pz >= (RIVER_SEG - 6) * SEG) { st.events.splashed = true; SFX.splash(); splash(); }
+    if (!st.events.river && pz >= (RIVER_SEG + 13) * SEG) {
       st.events.river = true;
-      SFX.splash(); splash();
       showEvent({
         title: 'El parche se mojó',
-        body: 'Estos parches no son resistentes al agua. Por unos segundos tu sensor de hidratación no podrá medir nada.',
+        body: 'Cruzaste el estero y el agua mojó el parche. Estos parches no son resistentes al agua: por unos segundos tu sensor de hidratación no podrá medir nada.',
         q: '¿Qué te dice tu cuerpo?',
         color: 'card-teal',
         after: () => { st.offHyd = 17; st.errT.hyd = 22; st.err.hyd = 22; st.errClock.hyd = 32; },
@@ -654,8 +665,23 @@
     const grass = fogged(s.band ? '#c99b45' : '#bd8f3e', fog);
     ctx.fillStyle = grass; ctx.fillRect(0, p2.y, W, p1.y - p2.y + 1);
     if (s.water) {
-      quad(p1.x, p1.y, p1.w * 1.9, p2.x, p2.y, p2.w * 1.9, fogged(s.band ? '#3fb8af' : '#36a8a0', fog));
-      if (s.band) quad(p1.x - p1.w * 0.4, p1.y, p1.w * 0.25, p2.x - p2.w * 0.4, p2.y, p2.w * 0.25, 'rgba(242,232,213,.55)');
+      // el estero cruza todo el paisaje; el vado (donde pasa el camino) es más claro y bajo
+      const shimmer = (s.i + Math.floor(st.t * 5)) % 2;
+      ctx.fillStyle = fogged(shimmer ? '#2f9a93' : '#2a8c86', fog); ctx.fillRect(0, p2.y, W, p1.y - p2.y + 1);
+      quad(p1.x, p1.y, p1.w * 1.15, p2.x, p2.y, p2.w * 1.15, fogged(shimmer ? '#5cc9bf' : '#52bdb3', fog));
+      // espuma que corre de lado: muestra la corriente
+      const hgt = p1.y - p2.y;
+      ctx.fillStyle = 'rgba(242,232,213,.85)';
+      for (let j = 0; j < 4; j++) {
+        const o = (((st.t * 0.45 + j * 0.25 + s.i * 0.17) % 1) * 5) - 2.5;
+        const fx = lerp(p2.x, p1.x, 0.5) + lerp(p2.w, p1.w, 0.5) * o;
+        ctx.fillRect(fx - p1.w * 0.14, p2.y + hgt * 0.35, p1.w * 0.28, Math.max(1, hgt * 0.3));
+      }
+      return;
+    }
+    if (s.bank) {
+      ctx.fillStyle = fogged(s.band ? '#7b6247' : '#6f573e', fog); ctx.fillRect(0, p2.y, W, p1.y - p2.y + 1);
+      quad(p1.x, p1.y, p1.w, p2.x, p2.y, p2.w, fogged('#8a6a4a', fog));
       return;
     }
     quad(p1.x, p1.y, p1.w * 1.12, p2.x, p2.y, p2.w * 1.12, fogged(s.band ? '#7a5c3c' : '#e3d2ad', fog));
@@ -708,6 +734,8 @@
       case 'lenga': drawLenga(u * (1.6 + o.v * 1.2), o.v); break;
       case 'calafate': drawCalafate(u * (1 + o.v * 0.6)); break;
       case 'post': drawPost(u); break;
+      case 'reeds': drawReeds(u * (0.9 + o.v * 0.5)); break;
+      case 'stone': drawStone(u * (0.8 + o.v * 0.6)); break;
       case 'sign': drawSign(u, o.text); break;
       case 'arch': drawArch(p.w); break;
     }
@@ -830,6 +858,23 @@
     for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.arc(u * (-0.9 + i * 0.36), -u * (0.4 + (i % 2) * 0.5), u * 0.12, 0, 7); ctx.fill(); }
   }
 
+  function drawReeds(u) {
+    const sway = reduceMotion ? 0 : Math.sin(st.t * 2.4) * u * 0.15;
+    for (let i = 0; i < 6; i++) {
+      const x0 = (i - 2.5) * u * 0.28, h = u * (1.4 + (i % 3) * 0.45);
+      ctx.beginPath(); ctx.moveTo(x0, 0); ctx.quadraticCurveTo(x0 + sway * 0.5, -h * 0.6, x0 + sway, -h);
+      ctx.strokeStyle = COL.ink; ctx.lineWidth = Math.max(1.5, u * 0.22); ctx.stroke();
+      ctx.strokeStyle = i % 2 ? '#a9a24a' : '#7f8b3a'; ctx.lineWidth = Math.max(1, u * 0.12); ctx.stroke();
+    }
+  }
+
+  function drawStone(u) {
+    const lw = Math.max(1, u * 0.12);
+    ctx.beginPath(); ctx.ellipse(0, -u * 0.25, u * 0.9, u * 0.45, 0, Math.PI, 0); ctx.lineTo(u * 0.9, 0); ctx.lineTo(-u * 0.9, 0); ctx.closePath();
+    ctx.fillStyle = '#7d8790'; ctx.fill(); stroke(lw);
+    ctx.beginPath(); ctx.ellipse(0, 0, u * 1.2, u * 0.22, 0, 0, 7); ctx.strokeStyle = 'rgba(242,232,213,.8)'; ctx.lineWidth = lw; ctx.stroke();
+  }
+
   function drawPost(u) {
     const lw = Math.max(1, u * 0.1);
     rr(-u * 0.14, -u * 1.6, u * 0.28, u * 1.6, u * 0.05); ctx.fillStyle = '#7a5434'; ctx.fill(); stroke(lw);
@@ -872,6 +917,14 @@
     const lw = Math.max(1.2, u * 0.16);
     if (st.walking) drawWalker(u, lw); else drawRider(u, lw);
     ctx.rotate(-lean);
+    // cruzando el estero: el agua tapa la rueda y salpica
+    if (s.water) {
+      ctx.beginPath(); ctx.ellipse(0, -u * 0.25, u * 2.1, u * 0.7, 0, 0, 7);
+      ctx.fillStyle = 'rgba(92,201,191,.92)'; ctx.fill();
+      ctx.strokeStyle = COL.bone; ctx.lineWidth = lw * 1.2; ctx.setLineDash([u * 0.5, u * 0.3]);
+      ctx.lineDashOffset = -st.t * u * 4; ctx.stroke(); ctx.setLineDash([]);
+      if (Math.random() < 0.8) particles.push({ x: (Math.random() - 0.5) * 2.4, y: -0.6, vx: (Math.random() - 0.5) * 6, vy: -Math.random() * 6 - 2, life: 0.5, max: 0.5, c: '#d6f5f2', r: 0.12 + Math.random() * 0.14 });
+    }
 
     // partículas relativas al ciclista
     for (let i = particles.length - 1; i >= 0; i--) {
@@ -1048,9 +1101,18 @@
   }
 
   // ---------------- HUD ----------------
+  // dónde empieza el exceso: con la marca ahí, recoger te sobra (mismas reglas que grab())
+  const FULL_AT = { hyd: 112 - GAIN.hyd, en: 112 - GAIN.en, fat: GAIN.fat - 10 };
+  const TIPS = {
+    hyd: { alert: 'Te falta agua', full: 'Lleno: no tomes' },
+    en: { alert: 'Falta energía', full: 'Lleno: no comas' },
+    fat: { alert: 'Busca viento', full: 'Descansado' },
+  };
   const gaugeEls = {};
   $$('.gauge').forEach(g => {
-    gaugeEls[g.dataset.k] = { root: g, band: $('.g-band', g), tick: $('.g-tick', g), val: $('.g-val b', g) };
+    const k = g.dataset.k;
+    gaugeEls[k] = { root: g, band: $('.g-band', g), tick: $('.g-tick', g), val: $('.g-val b', g), tip: $('.g-tip', g), state: '' };
+    g.style.setProperty('--full', FULL_AT[k] + '%');
   });
   function updateHUD() {
     const blindAll = st.offAll > 0;
@@ -1058,14 +1120,19 @@
       const el = gaugeEls[k];
       const off = blindAll || (k === 'hyd' && st.offHyd > 0);
       el.root.classList.toggle('off', off);
-      if (off) { el.val.textContent = '--'; el.root.classList.remove('alert'); continue; }
+      if (off) { el.val.textContent = '--'; el.root.classList.remove('alert', 'full'); continue; }
       const e = st.est[k];
       const lo = clamp(e - ERR[k], 0, 100), hi = clamp(e + ERR[k], 0, 100);
       el.root.style.setProperty('--lo', lo.toFixed(1) + '%');
       el.root.style.setProperty('--hi', hi.toFixed(1) + '%');
       el.root.style.setProperty('--x', e.toFixed(1));
       el.val.textContent = '≈' + Math.round(e);
-      el.root.classList.toggle('alert', k === 'fat' ? e > 70 : e < 30);
+      const alert = k === 'fat' ? e > 70 : e < 30;
+      const full = k === 'fat' ? e < FULL_AT.fat : e > FULL_AT[k];
+      el.root.classList.toggle('alert', alert);
+      el.root.classList.toggle('full', full);
+      const state = full ? 'full' : alert ? 'alert' : '';
+      if (state !== el.state) { el.state = state; el.tip.textContent = state ? TIPS[k][state] : ''; }
     }
     $('#led').classList.toggle('off', blindAll || st.offHyd > 0);
     $('#hudState').textContent = blindAll ? 'app desconectada' : st.offHyd > 0 ? 'sin señal (mojado)' : 'en vivo';
@@ -1193,23 +1260,58 @@
     }
   }
 
+  const stampEl = $('#stamp');
+  let stampTimer = 0;
   function finish(capped) {
     if (st.mode === 'end') return;
     st.mode = 'end'; st.finished = !capped; st.capped = capped;
+    st.won = !capped && st.raceT <= TARGET;
     clearToasts();
-    SFX.fanfare(); SFX.setIntensity(0.5);
+    if (st.won) SFX.fanfare(); else SFX.over();
+    SFX.setIntensity(0.5);
     setPlayUI(false);
-    // después de la primera partida ya se puede saltar la intro
-    $$('[data-skip]').forEach(b => b.classList.remove('hidden'));
     buildEnd();
+    // cartel grande: verde si ganaste, rojo si perdiste
+    const card = $('#stampCard');
+    card.classList.toggle('lose', !st.won);
+    $('#stampWord').textContent = st.won ? '¡Ganaste!' : 'Perdiste';
+    $('#stampSub').textContent = st.won
+      ? `Llegaste en ${fmt(st.raceT)} · meta 2:00`
+      : capped ? 'Se cerró la ruta antes de que llegaras' : `Llegaste en ${fmt(st.raceT)} · la meta era 2:00`;
+    show(null);
+    stampEl.classList.remove('hidden');
+    card.style.animation = 'none'; void card.offsetWidth; card.style.animation = '';
+    clearTimeout(stampTimer);
+    stampTimer = setTimeout(closeStamp, 2600);
+  }
+  function closeStamp() {
+    if (stampEl.classList.contains('hidden')) return;
+    clearTimeout(stampTimer);
+    stampEl.classList.add('hidden');
     show('scrEnd');
+    requestAnimationFrame(() => drawChart(chartK));
+  }
+  stampEl.addEventListener('click', closeStamp);
+
+  function toTitle() {
+    // cada partida parte desde cero, con todas las instrucciones, para el siguiente jugador
+    stampEl.classList.add('hidden');
+    st.mode = 'title';
+    st.z = 30 * SEG; st.lane = 0;
+    particles = [];
+    show('scrTitle');
   }
 
   // ---------------- Final ----------------
   let chartK = 'hyd';
   function buildEnd() {
     const t = st.raceT;
-    $('#endH').textContent = st.capped ? 'Se cerró la ruta' : t <= TARGET ? '¡Llegaste a tiempo!' : 'Llegaste al mirador';
+    const head = $('#endHead');
+    head.classList.remove('card-mustard', 'win', 'lose');
+    head.classList.add(st.won ? 'win' : 'lose');
+    $('#endH').textContent = st.won ? '¡Ganaste!' : 'Perdiste';
+    $('#endWhy').textContent = st.won ? 'Llegaste al mirador antes de 2:00.'
+      : st.capped ? 'Se cerró la ruta antes de que llegaras al mirador.' : 'Llegaste al mirador, pero después de 2:00.';
     $('#endTime').textContent = fmt(t);
     $('#endGoal').textContent = st.capped
       ? `te faltó ${Math.round((1 - (st.z + PLAYER_DZ) / (FINISH_SEG * SEG)) * 100)}% de la ruta`
@@ -1348,6 +1450,7 @@
     if (k === 'ArrowRight' || k === 'd' || k === 'D') { laneChange(1); e.preventDefault(); return; }
     if (k === 'Escape' || k === 'p' || k === 'P') { if (st.mode === 'play') pause(); else if (st.mode === 'pause') resume(); return; }
     if (k === 'Enter' || k === ' ') {
+      if (!stampEl.classList.contains('hidden')) { e.preventDefault(); closeStamp(); return; }
       if (e.target instanceof HTMLButtonElement) return; // el botón enfocado ya lo maneja
       const active = screens.find(s => s.classList.contains('active'));
       if (active && primaryFor[active.id]) { e.preventDefault(); $(primaryFor[active.id]).click(); }
@@ -1374,7 +1477,7 @@
   $('#btnEvent').addEventListener('click', resume);
   $('#btnResume').addEventListener('click', resume);
   $('#btnRestart').addEventListener('click', () => { show(null); startRace(); });
-  $('#btnAgain').addEventListener('click', () => { show('scrIntro3'); st.mode = 'intro'; });
+  $('#btnAgain').addEventListener('click', toTitle);
   $('#btnPause').addEventListener('click', () => (st.mode === 'play' ? pause() : resume()));
   const muteBtn = $('#btnMute');
   const syncMute = () => { muteBtn.classList.toggle('muted', SFX.muted); muteBtn.setAttribute('aria-label', SFX.muted ? 'Activar sonido' : 'Silenciar sonido'); };

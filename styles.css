@@ -12,6 +12,8 @@
   --granite: #6f7d8c;
   --pampa: #d9a441;
   --danger: #e2553f;
+  --win: #4cbb6c;
+  --lose: #d23b2c;
 
   --f-display: "League Gothic", "Oswald", "Arial Narrow", sans-serif;
   --f-body: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
@@ -274,6 +276,18 @@ button { font: inherit; color: inherit; }
 .pickups b { font-family: var(--f-display); font-weight: 400; font-size: 1.5rem; text-transform: uppercase; line-height: 1; }
 .pickups span { font-size: 1rem; }
 .howto-warn, .howto-key { margin: 0; font-size: 1.1rem; max-width: 64ch; }
+.mini-gauge {
+  display: grid; grid-template-columns: 30fr 54fr 16fr;
+  height: 30px;
+  border: var(--line) solid var(--ink);
+  border-radius: 999px;
+  overflow: hidden;
+  font-family: var(--f-data); font-size: .8rem; font-weight: 700; text-transform: uppercase;
+}
+.mini-gauge span { display: grid; place-items: center; white-space: nowrap; }
+.mg-red { background: repeating-linear-gradient(-45deg, rgba(226, 85, 63, .85) 0 6px, rgba(226, 85, 63, .5) 6px 12px); color: var(--ink); }
+.mg-ok { background: var(--bone); color: var(--ink); }
+.mg-yel { background: repeating-linear-gradient(45deg, #f2cf5b 0 6px, var(--mustard-deep) 6px 12px); color: var(--ink); border-left: 2px solid var(--ink); }
 .howto-key { background: var(--ink); color: var(--bone); padding: 10px 14px; border-radius: 10px; }
 
 /* Evento */
@@ -417,6 +431,26 @@ button { font: inherit; color: inherit; }
   background: repeating-linear-gradient(-45deg, rgba(226, 85, 63, .55) 0 5px, transparent 5px 10px);
 }
 .g-bar.fat .g-danger { left: auto; right: 0; }
+/* franja de exceso: si recoges con la marca aquí, te sobra */
+.g-full {
+  position: absolute; top: 0; bottom: 0;
+  left: var(--full, 86%); right: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: repeating-linear-gradient(45deg, rgba(232, 185, 47, .6) 0 5px, rgba(232, 185, 47, .15) 5px 10px);
+  box-shadow: inset 2px 0 0 var(--mustard);
+  transition: background-color .25s;
+}
+.g-bar.fat .g-full { left: 0; right: auto; width: var(--full, 20%); box-shadow: inset -2px 0 0 var(--mustard); }
+.g-full i { font-style: normal; font-family: var(--f-data); font-size: .62rem; font-weight: 700; color: var(--ink); white-space: nowrap; text-transform: uppercase; letter-spacing: .02em; background: var(--mustard); padding: 0 3px; border-radius: 3px; }
+.gauge.full .g-full { background: var(--mustard); animation: full-pulse .9s ease-in-out infinite alternate; }
+@keyframes full-pulse { to { background-color: #ffd65a; } }
+.g-tip { display: none; font-family: var(--f-data); font-size: .78rem; font-weight: 700; text-transform: uppercase; line-height: 1.05; }
+.gauge.full .g-tip, .gauge.alert .g-tip { display: block; }
+.gauge.full .g-src, .gauge.alert .g-src { display: none; }
+.gauge.full .g-tip { color: var(--mustard); }
+.gauge.alert .g-tip { color: #ffb4a6; }
+.gauge.off .g-tip { display: none; }
+.gauge.off .g-src { display: block; }
 .g-bar { container-type: inline-size; }
 .g-band {
   position: absolute; inset: 2px;
@@ -474,6 +508,43 @@ button { font: inherit; color: inherit; }
 .pad:active { background: var(--mustard); }
 @media (pointer: fine) { #touchpad { display: none !important; } }
 
+/* ---------- Cartel de resultado ---------- */
+#stamp {
+  position: fixed; inset: 0; z-index: 40;
+  display: grid; place-items: center;
+  padding: 16px;
+  background: rgba(20, 27, 45, .5);
+  cursor: pointer;
+}
+.stamp-card {
+  --stamp: var(--win); --stamp-fg: var(--ink);
+  background: var(--stamp); color: var(--stamp-fg);
+  border: 6px solid var(--ink);
+  outline: 4px solid var(--stamp); outline-offset: 6px;
+  border-radius: 18px;
+  padding: 10px clamp(24px, 6vw, 64px) 16px;
+  text-align: center;
+  transform: rotate(-5deg);
+  box-shadow: 0 30px 60px -20px rgba(0,0,0,.75);
+  animation: stamp-in .55s var(--ease-snap) both;
+}
+.stamp-card.lose { --stamp: var(--lose); --stamp-fg: var(--bone); transform: rotate(4deg); }
+.stamp-word {
+  margin: 0;
+  font-family: var(--f-display);
+  font-size: clamp(5.5rem, 22vw, 13rem);
+  line-height: .9;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
+.stamp-sub { margin: 4px 0 0; font-family: var(--f-display); font-size: clamp(1.4rem, 4.5vw, 2.4rem); text-transform: uppercase; letter-spacing: .03em; }
+@keyframes stamp-in {
+  0% { transform: scale(2.4) rotate(-12deg); opacity: 0; }
+  60% { transform: scale(.94) rotate(var(--rot, -5deg)); opacity: 1; }
+  100% { transform: scale(1) rotate(var(--rot, -5deg)); }
+}
+.stamp-card.lose { --rot: 4deg; }
+
 /* ---------- Final ---------- */
 .end-wrap { width: min(1080px, 100%); margin: 0 auto; display: grid; gap: 18px; padding-bottom: 32px; }
 .end-head {
@@ -484,6 +555,9 @@ button { font: inherit; color: inherit; }
 }
 .end-head h2 { font-family: var(--f-display); font-weight: 400; font-size: clamp(2.8rem, 8vw, 5rem); line-height: .9; text-transform: uppercase; margin: 0; }
 .end-time { margin: 0; font-family: var(--f-display); font-size: 3rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.end-head.win { --card: var(--win); --card-fg: var(--ink); }
+.end-head.lose { --card: var(--lose); --card-fg: var(--bone); }
+.end-why { margin: 6px 0 0; font-size: 1.15rem; font-weight: 600; }
 .end-goal { font-family: var(--f-data); font-size: 1rem; }
 .end-grid { display: grid; grid-template-columns: 1.55fr 1fr; gap: 18px; }
 .end-panel { --card: var(--bone); --card-fg: var(--ink); border-radius: 14px; padding: 18px 20px; }
@@ -531,10 +605,13 @@ button { font: inherit; color: inherit; }
   .hud-head { font-size: .72rem; }
   .hn-long { display: none; }
   .g-src { white-space: normal; line-height: 1; }
+  .g-full i { display: none; }
+  .g-tip { font-size: .72rem; }
+  .mini-gauge { font-size: .7rem; grid-template-columns: 32fr 40fr 28fr; }
   #btnMute { right: 10px; }
   #topbar .top-actions { margin-right: 48px; }
   .gauges { grid-template-columns: 1fr; gap: 4px; }
-  .gauge { grid-template-columns: 24px 92px 1fr 54px; grid-template-areas: "ico text bar val"; column-gap: 8px; }
+  .gauge { grid-template-columns: 24px 108px 1fr 50px; grid-template-areas: "ico text bar val"; column-gap: 8px; }
   .g-ico { width: 22px; height: 22px; }
   .g-name { font-size: 1.15rem; }
   .g-src { font-size: .72rem; }

@@ -46,6 +46,14 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     <svg class="ico-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
   </button>
 
+  <!-- Cartel de resultado -->
+  <div id="stamp" class="hidden" role="status" aria-live="assertive">
+    <div class="stamp-card" id="stampCard">
+      <p class="stamp-word" id="stampWord">¡Ganaste!</p>
+      <p class="stamp-sub" id="stampSub"></p>
+    </div>
+  </div>
+
   <!-- Mensajes cortos durante la carrera -->
   <div id="toast" role="status" aria-live="polite"></div>
 
@@ -61,27 +69,27 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
         <svg class="g-ico" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3c6 9 10 14 10 19.5a10 10 0 0 1-20 0C6 17 10 12 16 3z"/></svg>
         <div class="g-text">
           <span class="g-name">Hidratación</span>
-          <span class="g-src">sudor · Nix</span>
+          <span class="g-tip"></span><span class="g-src">sudor · Nix</span>
         </div>
-        <div class="g-bar"><span class="g-danger"></span><span class="g-band"></span><span class="g-tick"></span><span class="g-off">sin señal</span></div>
+        <div class="g-bar"><span class="g-danger"></span><span class="g-full"><i>te sobra</i></span><span class="g-band"></span><span class="g-tick"></span><span class="g-off">sin señal</span></div>
         <div class="g-val"><b>--</b><small>±17</small></div>
       </div>
       <div class="gauge" data-k="en">
         <svg class="g-ico" viewBox="0 0 32 32" aria-hidden="true"><rect x="7" y="4" width="18" height="24" rx="2"/><path d="M7 12h18M7 20h18M16 4v24"/></svg>
         <div class="g-text">
           <span class="g-name">Energía</span>
-          <span class="g-src">glucosa</span>
+          <span class="g-tip"></span><span class="g-src">glucosa</span>
         </div>
-        <div class="g-bar"><span class="g-danger"></span><span class="g-band"></span><span class="g-tick"></span><span class="g-off">sin señal</span></div>
+        <div class="g-bar"><span class="g-danger"></span><span class="g-full"><i>te sobra</i></span><span class="g-band"></span><span class="g-tick"></span><span class="g-off">sin señal</span></div>
         <div class="g-val"><b>--</b><small>±8</small></div>
       </div>
       <div class="gauge" data-k="fat">
         <svg class="g-ico" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 12h16a4 4 0 1 0-4-4M3 18h22a4 4 0 1 1-4 4M3 24h9"/></svg>
         <div class="g-text">
           <span class="g-name">Fatiga</span>
-          <span class="g-src">lactato · experimental</span>
+          <span class="g-tip"></span><span class="g-src">lactato · experimental</span>
         </div>
-        <div class="g-bar fat"><span class="g-danger"></span><span class="g-band"></span><span class="g-tick"></span><span class="g-off">sin señal</span></div>
+        <div class="g-bar fat"><span class="g-danger"></span><span class="g-full"><i>te sobra</i></span><span class="g-band"></span><span class="g-tick"></span><span class="g-off">sin señal</span></div>
         <div class="g-val"><b>--</b><small>±22</small></div>
       </div>
     </div>
@@ -216,7 +224,10 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
             <li><canvas class="pk" data-pk="en" width="72" height="72"></canvas><b>Chocolate</b><span>sube tu energía</span></li>
             <li><canvas class="pk" data-pk="fat" width="72" height="72"></canvas><b>Viento a favor</b><span>baja tu fatiga</span></li>
           </ul>
-          <p class="howto-warn">Si tomas o comes de más, te pesa y vas más lento. Si algo se te acaba, te bajas de la bici y caminas.</p>
+          <div class="mini-gauge" aria-hidden="true">
+            <span class="mg-red">te falta</span><span class="mg-ok">vas bien</span><span class="mg-yel">te sobra</span>
+          </div>
+          <p class="howto-warn">En cada barra, la <b>franja roja</b> dice que te falta: recoge. La <b>franja amarilla</b> dice que estás lleno: si recoges ahí, te sobra, te pesa y vas más lento. Si algo se te acaba, te bajas de la bici y caminas.</p>
           <p class="howto-key"><strong>Tu parche te dice cómo vas, pero estima.</strong> Mira también al ciclista: su cuerpo también te avisa.</p>
         </div>
         <div class="card-actions">
@@ -253,8 +264,11 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     <!-- Final -->
     <section class="screen scroll" id="scrEnd" aria-labelledby="endH">
       <div class="end-wrap">
-        <div class="end-head card-mustard">
-          <h2 id="endH">Mirador alcanzado</h2>
+        <div class="end-head card-mustard" id="endHead">
+          <div>
+            <h2 id="endH">Mirador alcanzado</h2>
+            <p class="end-why" id="endWhy"></p>
+          </div>
           <p class="end-time"><span id="endTime">0:00</span> <span class="end-goal" id="endGoal">meta 2:00</span></p>
         </div>
 
