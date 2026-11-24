@@ -1058,8 +1058,9 @@
       if (off) { el.val.textContent = '--'; el.root.classList.remove('alert'); continue; }
       const e = st.est[k];
       const lo = clamp(e - ERR[k], 0, 100), hi = clamp(e + ERR[k], 0, 100);
-      el.band.style.left = lo + '%'; el.band.style.width = (hi - lo) + '%';
-      el.tick.style.left = e + '%';
+      el.root.style.setProperty('--lo', lo.toFixed(1) + '%');
+      el.root.style.setProperty('--hi', hi.toFixed(1) + '%');
+      el.root.style.setProperty('--x', e.toFixed(1));
       el.val.textContent = '≈' + Math.round(e);
       el.root.classList.toggle('alert', k === 'fat' ? e > 70 : e < 30);
     }
